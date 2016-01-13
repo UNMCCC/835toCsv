@@ -1,13 +1,14 @@
 ################################################################################################
 ##
-##   A35 parser                             Inigo San Gil, Jan 2016
+##   835 parser                             Inigo San Gil, Jan 2016
 ##
 ##   Description:    A program that extracts info from the cryptic 
-##                   A35 format (pharma claims/payments) reporting 
+##                   835 format (pharma claims/payments/elec. remittance advice) 
+##                   reporting 
 ##                   This script will output a user-friendly
 ##                   comma delimited file named like the original file
 ##
-##   to use:  either invoke perl  a35_to_CSV_batch.pl  or double click on it
+##   to use:  either invoke perl  835_to_CSV_batch.pl  or double click on it
 ##
 ##   Requirements: Source Raw data files need to be in same folder as this
 ##   script. Source file names need to start by "PT" (can be adapted to other providers).
