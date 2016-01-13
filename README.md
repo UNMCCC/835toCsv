@@ -1,8 +1,8 @@
-# a35toCsv
+# 835toCsv
 
-A simple, procedural perl script that parses A35 file formats, extracts Rx, payment and other useful info into user-friendly comma delimited format
+A simple, procedural perl script that parses 835 file formats, extracts Rx, payment and other useful info into user-friendly comma delimited format
 
-The script here extracts info from the cryptic archaic A35 exchange format (pharma claims/payments) reporting 
+The script here extracts info from the cryptic archaic 835 exchange format (pharma electronic remittance advice) reporting 
 
 This script will output a user-friendly comma delimited file named like the original file
 
