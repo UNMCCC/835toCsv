@@ -52,6 +52,9 @@ closedir(DIR);
     
 foreach $file (@docfiles) {
   
+   if ($file =~/\.csv$/){ 
+     next;   # Do not process processed files.
+   }
    # Read the contents of the PT file
    open(DOC, "$file") or print("Error opening $file $!\n");
    $line = <DOC>;
