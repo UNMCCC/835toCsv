@@ -62,7 +62,10 @@ foreach $file (@docfiles) {
 
   open(FOUT, ">$csvfile") or die "Could not write out your comma delimited file \n";
 
-  ## parse (extract) the contents of the file
+  ## Parse (extract) the contents of the file
+
+  ## clean out new lines -- unix encoding.
+   $line =~ s/\n//g;
 
 #  NOTE :  ▲ and ↔ are the actual field-delimiters in the file.
 #  In here, we meticulously leverage them by matching .{1}  
