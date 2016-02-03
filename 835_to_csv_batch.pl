@@ -29,12 +29,10 @@
 ################################################################################################
 
 use strict;
-my $file; my $csvfile;
-my $bpr; my $trn_eft; my $cchk;
+my $file; my $csvfile; my $bpr; my $trn_eft; my $cchk;
 my $clp_rx; my $clp_code; my $payer_per;
 my $qc_pt;  my $trans_fee;
-my $line; my $clp; my @clps;
-my $payor;
+my $line; my $clp; my @clps; my $payor;
 my $amount_paid; my $pt_qc; my $datefilled;
 my $after_clp; my $clp_reversed;
 my $dirfee; my $trnfee; my $total_fees;
@@ -55,6 +53,10 @@ foreach $file (@docfiles) {
    if ($file =~/\.csv$/){ 
      next;   # Do not process processed files.
    }
+   ##
+   ## Flush Line
+   undef $line;
+   
    # Read the contents of the PT file
    open(DOC, "$file") or print("Error opening $file $!\n");
    $line = <DOC>;
@@ -66,7 +68,7 @@ foreach $file (@docfiles) {
   open(FOUT, ">$csvfile") or die "Could not write out your comma delimited file \n";
 
   ## Parse (extract) the contents of the file
-
+  
   ## clean out new lines -- unix encoding.
    $line =~ s/\n//g;
 
@@ -74,6 +76,7 @@ foreach $file (@docfiles) {
 #  In here, we meticulously leverage them by matching .{1}  
 #  other approaches may be neccessary.
 
+  undef $bpr; undef $cchk; undef $payor;
 
   if ( $line =~ /BPR.{1}I.{1}(\d+)\.(\d+)/ ){
     $bpr = $1 . '.' . $2 ;
@@ -106,8 +109,14 @@ foreach $file (@docfiles) {
   ## print headers
   print FOUT "\n\nCLP Rx, Amount Paid, PT Name, Date Filled \n";
   print FOUT "CLAIMS PAID \n\n";
-  @clps = split(/CLP.{1}/,$line);
   
+  undef @clps;       ##  Flush buffers - do not carry over previous 835 data.
+  undef $clp;  undef $clp_rx ;  undef $clp_code ;   undef $after_clp ;
+  undef $amount_paid; undef $pt_qc;  undef $datefilled;
+  undef $clp_reversed;
+  
+  @clps = split(/CLP.{1}/,$line);
+
   foreach $clp (@clps){
   
     $clp =~ s/\n//g;       ## removes newline characters (gets on way of pattern match)
@@ -154,7 +163,7 @@ foreach $file (@docfiles) {
       }
 
     }
-
+    
   }
   if($after_clp =~ /AH.{1}43.{1}(\d+)\.(\d+)/ ){
     $trnfee = $1.'.'.$2;
