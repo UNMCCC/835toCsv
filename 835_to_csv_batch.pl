@@ -129,12 +129,14 @@ foreach $file (@docfiles) {
 
       if ($clp_code == 1){
 
-        if($after_clp =~ /^.{1}\d+\.\d+.{1}(\d+)\.(\d+)/){
+        if($after_clp       =~ /^.{1}\d+\.\d+.{1}(\d+)\.(\d+)/){
           $amount_paid = $1 . '.' . $2; 
+        }elsif($after_clp =~ /^.{1}\d+\.\d+.{1}(\d+).{1}/){   ## no cents in amount paid
+          $amount_paid = $1 . '.00' ; 
         }elsif($after_clp =~ /^.{1}\d+.{1}(\d+)\.(\d+)/){   ## the 0 cents exception
           $amount_paid = $1 . '.' . $2; 
         }elsif($after_clp =~ /^.{1}\d+.{1}(\d+)/){   ## the 0 cents and also 0 cents exception
-          $amount_paid = $1 . '.' . $2;   
+          $amount_paid = $1 . '.' . $2; 
         }
         $clp =~ /.{1}QC.{1}\d.{1}(\w+).{1}.(\w+)/;
         $pt_qc = $1 . ' ' . $2; 
