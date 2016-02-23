@@ -131,18 +131,22 @@ foreach $file (@docfiles) {
 
       if ($clp_code == 1){       ## 1 is paid, 4  reject, 22 reversal, 5 misc.
 
-        if($after_clp       =~ /^\x{1D}\d+\.\d+.{1}(\d+)\.(\d+)/){
+        if($after_clp       =~ /^\x{1D}\d+\.\d+\x{1D}(\d+)\.(\d+)/){
           $amount_paid = $1 . '.' . $2; 
-        }elsif($after_clp =~ /^\x{1D}\d+\.\d+.{1}(\d+).{1}/){   ## no cents in amount paid
+        }elsif($after_clp =~ /^\x{1D}\d+\.\d+\x{1D}(\d+)\x{1D}/){   ## no cents in amount paid
           $amount_paid = $1 . '.00' ; 
-        }elsif($after_clp =~ /^\x{1D}\d+.{1}(\d+)\.(\d+)/){   ## the 0 cents exception
+        }elsif($after_clp =~ /^\x{1D}\d+\x{1D}(\d+)\.(\d+)/){   ## the 0 cents exception
           $amount_paid = $1 . '.' . $2; 
-        }elsif($after_clp =~ /^\x{1D}\d+.{1}(\d+)/){   ## the 0 cents and also 0 cents exception
+        }elsif($after_clp =~ /^\x{1D}\d+\x{1D}(\d+)\x{1D}/){   ## the 0 cents and also 0 cents exception
           $amount_paid = $1 . '.' . $2; 
         }
-        $clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\x{1D}(\w+)/;
-        $pt_qc = $1 . ' ' . $2; 
-        $clp =~ /DTM.{1}232.{1}(\d+)/;
+        ## last and first names may have spaces
+        if($clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\s(\w+)\x{1D}(\w+)/){
+           $pt_qc = $1 . ' ' . $2 . ' ' . $3; 
+        }elsif( $clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\x{1D}(\w+)/){
+            $pt_qc = $1 . ' ' . $2; 
+        }
+        $clp =~ /DTM\x{1D}232\x{1D}(\d+)/;
         $datefilled = $1;
         print FOUT "$clp_rx, $amount_paid, $pt_qc, $datefilled \n";
       }elsif ($clp_code == 4){
@@ -151,16 +155,16 @@ foreach $file (@docfiles) {
 
       }elsif ($clp_code == 2){
         
-        if($after_clp =~ /^.{1}\d+\.\d+.{1}(\d+)\.(\d+)/){
+        if($after_clp =~ /^\x{1D}\d+\.\d+\x{1D}(\d+)\.(\d+)/){
           $amount_paid = $1 . '.' . $2; 
-        }elsif($after_clp =~ /^.{1}\d+.{1}(\d+)\.(\d+)/){   ## the 0 cents exception
+        }elsif($after_clp =~ /^\x{1D}\d+.{1}(\d+)\.(\d+)/){   ## the 0 cents exception
           $amount_paid = $1 . '.' . $2;   
-        }elsif($after_clp =~ /^.{1}\d+.{1}(\d+)/){   ## the 0 cents and also 0 cents exception
+        }elsif($after_clp =~ /^\x{1D}\d+.{1}(\d+)/){   ## the 0 cents and also 0 cents exception
           $amount_paid = $1 . '.' . $2;   
         }
-        $clp =~ /.{1}QC.{1}\d.{1}(\w+).{1}.(\w+)/;
+        $clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\x{1D}(\w+)/;
         $pt_qc = $1 . ' ' . $2; 
-        $clp =~ /DTM.{1}232.{1}(\d+)/;
+        $clp =~ /DTM\x{1D}232\x{1D}(\d+)/;
         $datefilled = $1; 
         $clp_reversed .= $clp_rx .', ' . $amount_paid . ', ' . $pt_qc . ', ' . $datefilled . "\n";
 
