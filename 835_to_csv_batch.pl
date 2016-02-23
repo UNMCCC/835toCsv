@@ -20,11 +20,16 @@
 ##
 ##   Eng: Reverse engineers format according to samples provided
 ##
-##   This is an example of a single CLP (clean and not a real record)
+##   This is an example of a single (paid) CLP (clean and not a real record)
 ##   CLP2400724161.034.0715131527960514082140848120
 ##   CASCO9043.2191-0.15130-0.111300.11CASPR315
-##   NM1QC1PALOTESPERIKOMI000029426001DTM23220151006SVCN4
+##   NM1QC1PALOTESPERIKOMI000029426001DTM23220131206SVCN4
 ##   1072200180161.0361.03
+##
+##    THis could be a reject (not a real thing) - note the 4 - 0 - 0, this seems to repeat consistently.
+##    CLP160015140013153105501935119502860CASCO130-0.121300
+##   .12160NM1QC1DOEJOHNMI353613148001DTM23220131102SVCN45901
+##     104151000LQRX70
 ##
 ################################################################################################
 
@@ -36,6 +41,7 @@ my $line; my $clp; my @clps; my $payor;
 my $amount_paid; my $pt_qc; my $datefilled;
 my $after_clp; my $clp_reversed;
 my $dirfee; my $trnfee; my $total_fees;
+my $clp_rejected;
 
 my @docfiles;
 ##
@@ -115,7 +121,7 @@ foreach $file (@docfiles) {
   undef @clps;       ##  Flush buffers - do not carry over previous 835 data.
   undef $clp;  undef $clp_rx ;  undef $clp_code ;   undef $after_clp ;
   undef $amount_paid; undef $pt_qc;  undef $datefilled;
-  undef $clp_reversed;
+  undef $clp_reversed; $clp_rejected;
   
   @clps = split(/CLP\x{1D}/,$line);
 
@@ -139,7 +145,10 @@ foreach $file (@docfiles) {
           $amount_paid = $1 . '.' . $2; 
         }elsif($after_clp =~ /^\x{1D}\d+\x{1D}(\d+)\x{1D}/){   ## the 0 cents and also 0 cents exception
           $amount_paid = $1 . '.' . $2; 
+        }else{ 
+          $amount_paid = "failed";
         }
+        
         ## last and first names may have spaces
         if($clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\s(\w+)\x{1D}(\w+)/){
            $pt_qc = $1 . ' ' . $2 . ' ' . $3; 
@@ -149,9 +158,19 @@ foreach $file (@docfiles) {
         $clp =~ /DTM\x{1D}232\x{1D}(\d+)/;
         $datefilled = $1;
         print FOUT "$clp_rx, $amount_paid, $pt_qc, $datefilled \n";
+        
       }elsif ($clp_code == 4){
 
-        ## print "Rx REJECT is $clp_rx \n ";       ## ignore Reject Claims - can be included
+         if($clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\s(\w+)\x{1D}(\w+)/){
+           $pt_qc = $1 . ' ' . $2 . ' ' . $3; 
+         }elsif( $clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\x{1D}(\w+)/){
+            $pt_qc = $1 . ' ' . $2; 
+         }elsif( $clp =~ /\x{1D}QC\x{1D}\d\x{1D}NOT ON FILE/){
+            $pt_qc = 'Not On File';         
+         }
+         $clp =~ /DTM\x{1D}232\x{1D}(\d+)/;
+         $datefilled = $1; 
+         $clp_rejected .= $clp_rx .', 0  , ' . $pt_qc . ', ' . $datefilled . "\n";
 
       }elsif ($clp_code == 2){
         
@@ -163,14 +182,22 @@ foreach $file (@docfiles) {
           $amount_paid = $1 . '.' . $2; 
         }elsif($after_clp =~ /^2\x{1D}-?\d+\x{1D}(-?\d+)\x{1D}/){   ## the 0 cents and also 0 cents exception
           $amount_paid = $1 . '.' . $2; 
-        }else{print "$after_clp no case \n"}
+        }else{
+           $amount_paid = "failed";
+        }
         
-        $clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\x{1D}(\w+)/;
-        $pt_qc = $1 . ' ' . $2; 
+        if($clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\s(\w+)\x{1D}(\w+)/){
+           $pt_qc = $1 . ' ' . $2 . ' ' . $3; 
+        }elsif( $clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\x{1D}(\w+)/){
+            $pt_qc = $1 . ' ' . $2; 
+        }
         $clp =~ /DTM\x{1D}232\x{1D}(\d+)/;
         $datefilled = $1; 
         $clp_reversed .= $clp_rx .', ' . $amount_paid . ', ' . $pt_qc . ', ' . $datefilled . "\n";
 
+      }elsif ($clp_code == 5){
+          ##Misc code, warn
+          print "Misc code on $after_clp\n";      
       }
 
     }
@@ -190,6 +217,8 @@ foreach $file (@docfiles) {
   print FOUT "TOTAL FEES $total_fees\n";
   print FOUT "CLAIMS REVERSED \n\n";
   print FOUT "$clp_reversed";
-
+  print FOUT "\n\n";
+  print FOUT "CLAIMS REJECTED \n\n";
+  print FOUT "$clp_rejected";
   close (FOUT);
 }
