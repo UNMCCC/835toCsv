@@ -66,6 +66,8 @@ foreach $file (@docfiles) {
   $csvfile = $file.'.csv';
 
   open(FOUT, ">$csvfile") or die "Could not write out your comma delimited file \n";
+  
+   print FOUT "835 filename $file \n";
 
   ## Parse (extract) the contents of the file
   
@@ -78,7 +80,7 @@ foreach $file (@docfiles) {
 
   undef $bpr; undef $cchk; undef $payor;
 
-  if ( $line =~ /BPR.{1}I.{1}(\d+)\.(\d+)/ ){
+  if ( $line =~ /BPR\x{1D}I\x{1D}(\d+)\.(\d+)/ ){
     $bpr = $1 . '.' . $2 ;
     print FOUT "Check Amount: $bpr,";
   }
@@ -88,7 +90,7 @@ foreach $file (@docfiles) {
     print FOUT "Check Date: $cchk,";
   }
 
-  if ($line =~ /(?<!B)PR.{1}(\w+)/){
+  if ($line =~ /(?<!B)PR\x{1D}(\w+)/){
     $payor = $1.$2;
     print FOUT "Payor: $payor,"
   }
@@ -115,30 +117,30 @@ foreach $file (@docfiles) {
   undef $amount_paid; undef $pt_qc;  undef $datefilled;
   undef $clp_reversed;
   
-  @clps = split(/CLP.{1}/,$line);
+  @clps = split(/CLP\x{1D}/,$line);
 
   foreach $clp (@clps){
   
     $clp =~ s/\n//g;       ## removes newline characters (gets on way of pattern match)
     
-    if ($clp =~ /^(\d{7}).{1}(\d{1})/){
+    if ($clp =~ /^(\d{7})\x{1D}(\d{1})/){
 
       $clp_rx = $1;
       $clp_code = $2;
       $after_clp = $';
 
-      if ($clp_code == 1){
+      if ($clp_code == 1){       ## 1 is paid, 4  reject, 22 reversal, 5 misc.
 
-        if($after_clp       =~ /^.{1}\d+\.\d+.{1}(\d+)\.(\d+)/){
+        if($after_clp       =~ /^\x{1D}\d+\.\d+.{1}(\d+)\.(\d+)/){
           $amount_paid = $1 . '.' . $2; 
-        }elsif($after_clp =~ /^.{1}\d+\.\d+.{1}(\d+).{1}/){   ## no cents in amount paid
+        }elsif($after_clp =~ /^\x{1D}\d+\.\d+.{1}(\d+).{1}/){   ## no cents in amount paid
           $amount_paid = $1 . '.00' ; 
-        }elsif($after_clp =~ /^.{1}\d+.{1}(\d+)\.(\d+)/){   ## the 0 cents exception
+        }elsif($after_clp =~ /^\x{1D}\d+.{1}(\d+)\.(\d+)/){   ## the 0 cents exception
           $amount_paid = $1 . '.' . $2; 
-        }elsif($after_clp =~ /^.{1}\d+.{1}(\d+)/){   ## the 0 cents and also 0 cents exception
+        }elsif($after_clp =~ /^\x{1D}\d+.{1}(\d+)/){   ## the 0 cents and also 0 cents exception
           $amount_paid = $1 . '.' . $2; 
         }
-        $clp =~ /.{1}QC.{1}\d.{1}(\w+).{1}.(\w+)/;
+        $clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\x{1D}(\w+)/;
         $pt_qc = $1 . ' ' . $2; 
         $clp =~ /DTM.{1}232.{1}(\d+)/;
         $datefilled = $1;
