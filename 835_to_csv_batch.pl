@@ -155,13 +155,16 @@ foreach $file (@docfiles) {
 
       }elsif ($clp_code == 2){
         
-        if($after_clp =~ /^\x{1D}\d+\.\d+\x{1D}(\d+)\.(\d+)/){
+        if($after_clp       =~ /^2\x{1D}-?\d+\.\d+\x{1D}(-?\d+)\.(\d+)/){
           $amount_paid = $1 . '.' . $2; 
-        }elsif($after_clp =~ /^\x{1D}\d+.{1}(\d+)\.(\d+)/){   ## the 0 cents exception
-          $amount_paid = $1 . '.' . $2;   
-        }elsif($after_clp =~ /^\x{1D}\d+.{1}(\d+)/){   ## the 0 cents and also 0 cents exception
-          $amount_paid = $1 . '.' . $2;   
-        }
+        }elsif($after_clp =~ /^2\x{1D}-?\d+\.\d+\x{1D}(-?\d+)\x{1D}/){   ## no cents in amount paid
+          $amount_paid = $1 . '.00' ; 
+        }elsif($after_clp =~ /^2\x{1D}-?\d+\x{1D}(-?\d+)\.(\d+)/){   ## the 0 cents exception
+          $amount_paid = $1 . '.' . $2; 
+        }elsif($after_clp =~ /^2\x{1D}-?\d+\x{1D}(-?\d+)\x{1D}/){   ## the 0 cents and also 0 cents exception
+          $amount_paid = $1 . '.' . $2; 
+        }else{print "$after_clp no case \n"}
+        
         $clp =~ /\x{1D}QC\x{1D}\d\x{1D}(\w+)\x{1D}(\w+)/;
         $pt_qc = $1 . ' ' . $2; 
         $clp =~ /DTM\x{1D}232\x{1D}(\d+)/;
