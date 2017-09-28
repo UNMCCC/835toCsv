@@ -41,6 +41,8 @@ my $line; my $clp; my @clps; my $payor;
 my $amount_paid; my $pt_qc; my $datefilled;
 my $after_clp; my $clp_reversed;
 my $dirfee; my $trnfee; my $total_fees;
+my $rebate=0; my $unrecov=0; my $overpymt=0; my $lumpsum=0; my $ip=0;
+my $b3 = 0; my $fb =0; 
 my $clp_rejected;
 
 my @docfiles;
@@ -203,6 +205,9 @@ foreach $file (@docfiles) {
     }
     
   }
+ $rebate=0; $unrecov=0; $overpymt=0; 
+ $lumpsum=0; $ip=0; $b3 = 0;  $fb =0;
+  
   if($after_clp =~ /AH.{1}43.{1}(\d+)\.(\d+)/ ){
     $trnfee = $1.'.'.$2;
   }elsif($after_clp =~ /AH.{1}43.{1}(\d+)/ ){
@@ -213,8 +218,58 @@ foreach $file (@docfiles) {
   }elsif($after_clp =~ /CS.{1}62.{1}(\d+)/ ){
     $dirfee = $1;
   }
+  
+   if($after_clp =~ /B2.{1}\d+.{1}(\d+)\.(\d+)/ ){
+    $rebate = $1.'.'.$2;
+  }elsif($after_clp =~ /B2.{1}\d+.{1}(\d+)/ ){
+    $rebate = $1;
+  }
+  
+  if($after_clp =~ /WU.{1}\d+.{1}(\d+)\.(\d+)/ ){
+    $unrecov = $1.'.'.$2;
+  }elsif($after_clp =~ /WU.{1}\d+.{1}(\d+)/ ){
+    $unrecov = $1;
+  }
+  
+  if($after_clp =~ /WO.{1}\d+.{1}(\d+)\.(\d+)/ ){
+    $overpymt = $1.'.'.$2;
+  }elsif($after_clp =~ /WO.{1}\d+.{1}(\d+)/ ){
+    $overpymt = $1;
+  }
+    
+  if($after_clp =~ /LS.{1}\d+.{1}(\d+)\.(\d+)/ ){
+    $lumpsum = $1.'.'.$2;
+  }elsif($after_clp =~ /LS.{1}\d+.{1}(\d+)/ ){
+    $lumpsum = $1;
+  }
+  
+  if($after_clp =~ /IP.{1}\d+.{1}(\d+)\.(\d+)/ ){
+    $ip = $1.'.'.$2;
+  }elsif($after_clp =~ /IP.{1}\d+.{1}(\d+)/ ){
+    $ip = $1;
+  }
+    
+  if($after_clp =~ /B3.{1}\d+.{1}(\d+)\.(\d+)/ ){
+    $b3 = $1.'.'.$2;
+  }elsif($after_clp =~ /B3.{1}\d+.{1}(\d+)/ ){
+    $b3 = $1;
+  }
+  
+  if($after_clp =~ /FB.{1}\d+.{1}(\d+)\.(\d+)/ ){
+    $fb = $1.'.'.$2;
+  }elsif($after_clp =~ /FB.{1}\d+.{1}(\d+)/ ){
+    $fb = $1;
+  }
   $total_fees = $trnfee + $dirfee;
-  print FOUT "TOTAL FEES $total_fees\n";
+   
+  print FOUT "TOTAL FEES (Or/and Adjustments) $total_fees\n";
+  if($rebate > 0){print FOUT " Rebate  $rebate\n"; }
+  if($unrecov > 0){print FOUT " Unspecified Recovery  $unrecov\n"; }
+  if($overpymt > 0){print FOUT "Overpayment  $overpymt\n"; }
+  if($lumpsum > 0){print FOUT "Lump Sum  $lumpsum\n"; }
+  if($ip > 0){print FOUT "Incentive Premium Paid $ip\n"; }
+  if($b3 > 0){print FOUT "Recovery Allowance $b3\n"; }
+  if($fb > 0){print FOUT "Forward Balance $fb\n"; }
   print FOUT "CLAIMS REVERSED \n\n";
   print FOUT "$clp_reversed";
   print FOUT "\n\n";
