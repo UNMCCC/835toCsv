@@ -49,7 +49,7 @@ my @docfiles;
 undef $/;
 
 opendir(DIR,".") or die "$!";
-@docfiles = grep(/PT\w+\s+\d+/, readdir(DIR));
+@docfiles = grep(/PT/, readdir(DIR));
 closedir(DIR);
 ## Iterate through all the PT files.  (CVS, express scripts may begin by N..)
 ##
